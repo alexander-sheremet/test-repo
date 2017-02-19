@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Find InstanceId using TagName
+aws ec2 describe-instances --query "Reservations[*].Instances[?Tags[?Value==\`$INST_TAG\`]].InstanceId" --output text

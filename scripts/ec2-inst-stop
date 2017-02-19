@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Stop aws ec2 instance
+aws ec2 stop-instances --instance-ids "$INST_ID"

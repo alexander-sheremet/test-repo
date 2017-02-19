@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Start aws ec2 instance
+aws ec2 start-instances --instance-ids "$INST_ID"
