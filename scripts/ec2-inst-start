@@ -1,4 +1,11 @@
 #!/bin/sh
 
+if [ -n "$1" ]
+then
+  CID="$1"
+else
+  CID="$INST_ID"
+fi
+
 # Start aws ec2 instance
-aws ec2 start-instances --instance-ids "$INST_ID"
+aws ec2 start-instances --instance-ids "$CID"

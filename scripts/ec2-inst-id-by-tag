@@ -1,4 +1,11 @@
 #!/bin/sh
 
+if [ -n "$1" ]
+then
+  CTAG="$1"
+else
+  CTAG="$INST_TAG"
+fi
+
 # Find InstanceId using TagName
-aws ec2 describe-instances --query "Reservations[*].Instances[?Tags[?Value==\`$INST_TAG\`]].InstanceId" --output text
+aws ec2 describe-instances --query "Reservations[*].Instances[?Tags[?Value==\`$CTAG\`]].InstanceId" --output text
