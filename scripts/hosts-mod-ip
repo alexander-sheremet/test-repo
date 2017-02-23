@@ -1,0 +1,32 @@
+#!/bin/sh
+# Modify Windows hosts file with IP of AWS instance "mydevenv"
+# Run as Administrator from Windows
+
+HOSTS_WIN=/cygdrive/c/Windows/System32/drivers/etc/hosts
+HOSTS_TMP=/tmp/hosts
+
+IP=`ec2-inst-get-ip $@ |sed 's/"//g'`
+
+if [ "$IP" == "null" ]
+then
+  echo "ERROR: no IP address"
+  exit 1
+fi
+
+cat "$HOSTS_WIN" | awk -v IP="$IP" '
+{
+  if (/mydevenv/)
+  {
+    split ($0, a, "[ \t]")
+    print IP "\t" a[2]
+  }
+  else
+    print
+}' > "$HOSTS_TMP"
+
+if cp "$HOSTS_TMP" "$HOSTS_WIN"
+then
+  echo "IP address updated:"
+  grep mydevenv $HOSTS_WIN
+  rm "$HOSTS_TMP"
+fi
