@@ -1,0 +1,11 @@
+#!/bin/sh
+
+if [ -n "$1" ]
+then
+  CID="$1"
+else
+  CID="$INST_ID"
+fi
+
+# Terminate aws ec2 instance
+aws ec2 terminate-instances --instance-ids "$CID"
