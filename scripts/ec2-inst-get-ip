@@ -8,4 +8,4 @@ else
 fi
 
 # Retrieve the public IP address to connect to the instance
-aws ec2 describe-instances --instance-ids "$CID" --query 'Reservations[0].Instances[0].PublicIpAddress'
+aws ec2 describe-instances --instance-ids "$CID" --query 'Reservations[0].Instances[0].PublicIpAddress' --output text

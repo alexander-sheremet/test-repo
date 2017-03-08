@@ -5,7 +5,7 @@
 HOSTS_WIN=/cygdrive/c/Windows/System32/drivers/etc/hosts
 HOSTS_TMP=/tmp/hosts
 
-IP=`ec2-inst-get-ip $@ |sed 's/"//g'`
+IP=`ec2-inst-get-ip $@`
 
 if [ "$IP" == "null" ]
 then
