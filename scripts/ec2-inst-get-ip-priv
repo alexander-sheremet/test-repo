@@ -1,0 +1,11 @@
+#!/bin/sh
+
+if [ -n "$1" ]
+then
+  CID="$1"
+else
+  CID="$INST_ID"
+fi
+
+# Retrieve the private IP address to connect to the instance
+aws ec2 describe-instances --instance-ids "$CID" --query 'Reservations[0].Instances[0].PrivateIpAddress' --output text
