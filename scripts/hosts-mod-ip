@@ -1,13 +1,15 @@
 #!/bin/sh
-# Modify Windows hosts file with IP of AWS instance "mydevenv"
-# Run as Administrator from Windows
+# This script should be executed on Windows host under Cygwin to
+# modify Windows hosts file with IP of AWS instance "mydevenv".
+# It requires sudo command to elevate privilegies for updating Windows hosts file.
+# sudo is the shell script containing: nircmd.exe elevatecmd execmd "$@"
 
 HOSTS_WIN=/cygdrive/c/Windows/System32/drivers/etc/hosts
 HOSTS_TMP=/tmp/hosts
 
 IP=`ec2-inst-get-ip $@`
 
-if [ "$IP" == "null" ]
+if [ "$IP" == "None" ]
 then
   echo "ERROR: no IP address"
   exit 1
@@ -24,7 +26,7 @@ cat "$HOSTS_WIN" | awk -v IP="$IP" '
     print
 }' > "$HOSTS_TMP"
 
-if cp "$HOSTS_TMP" "$HOSTS_WIN"
+if sudo cp "$HOSTS_TMP" "$HOSTS_WIN"
 then
   echo "IP address updated:"
   grep mydevenv $HOSTS_WIN
