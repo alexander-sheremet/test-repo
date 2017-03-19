@@ -24,4 +24,4 @@ aws ec2 run-instances \
 
 aws ec2 create-tags \
   --resources `cat $HOME/.aws_iid_$INSTNAME` \
-  --tags 'Key="Name",Value="$INSTNAME"'
+  --tags "Key=Name,Value=$INSTNAME"
