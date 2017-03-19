@@ -1,5 +1,27 @@
 #!/bin/sh
+# Create and start AWS instance: CentOS 7.3 x64
 
-# Run the instance: CentOS 7.3 x64
-# Returns: InstanceId
-aws ec2 run-instances --image-id ami-8e2c9aee --security-group-ids sg-966bf7ee --count 1 --instance-type t2.micro --key-name devenv-key --query 'Instances[0].InstanceId' --output text $@
+cd `dirname "$0"`
+
+INSTNAME=$1
+
+if ! egrep "pa-artifact|pa-appsrv" <<< $INSTNAME >/dev/null
+then
+  echo "ERROR: wrong instance name specified"
+  exit 1
+fi
+
+aws ec2 run-instances \
+  --image-id ami-8e2c9aee \
+  --security-group-ids sg-966bf7ee \
+  --count 1 \
+  --instance-type t2.micro \
+  --key-name devenv-key \
+  --query 'Instances[0].InstanceId' \
+  --output text \
+  --user-data userdata_$INSTNAME.sh \
+  | tee $HOME/.aws_iid_$INSTNAME
+
+aws ec2 create-tags \
+  --resources `cat $HOME/.aws_iid_$INSTNAME` \
+  --tags 'Key="Name",Value="$INSTNAME"'
