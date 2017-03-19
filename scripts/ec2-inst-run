@@ -1,9 +1,10 @@
 #!/bin/sh
 # Create and start AWS instance: CentOS 7.3 x64
 
-cd `dirname "$0"`
-
 INSTNAME=$1
+WRKDIR=`dirname "$0"`
+
+cd "$WRKDIR"
 
 if ! egrep "pa-artifact|pa-appsrv" <<< $INSTNAME >/dev/null
 then
@@ -19,7 +20,7 @@ aws ec2 run-instances \
   --key-name devenv-key \
   --query 'Instances[0].InstanceId' \
   --output text \
-  --user-data userdata_$INSTNAME.sh \
+  --user-data file:///$WRKDIR/userdata_$INSTNAME.sh \
   | tee $HOME/.aws_iid_$INSTNAME
 
 aws ec2 create-tags \
