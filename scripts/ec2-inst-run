@@ -20,7 +20,7 @@ aws ec2 run-instances \
   --key-name devenv-key \
   --query 'Instances[0].InstanceId' \
   --output text \
-  --user-data file:///$WRKDIR/userdata_$INSTNAME.sh \
+  --user-data file://$WRKDIR/userdata_$INSTNAME.sh \
   | tee $HOME/.aws_iid_$INSTNAME
 
 aws ec2 create-tags \
