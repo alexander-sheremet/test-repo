@@ -5,7 +5,7 @@ LOGS="/tmp/userdata-log.$(date -I)"
 exec >$LOGS 2>&1
 
 # Define hostname
-export HOSTNAME=pa-appsrv.mydev.org
+HOSTNAME=`basename $0 | sed 's/.*_//; s/\..*//'`
 hostname $HOSTNAME
 echo $HOSTNAME > /etc/hostname
 echo 172.31.37.107 pm-jenkins.mydev.com >> /etc/hosts
@@ -18,7 +18,7 @@ yum -y install puppet
 cat >>/etc/puppet/puppet.conf <<EOF
 
     server=pm-jenkins.mydev.com
-    certname=pa-appsrv.mydev.org
+    certname=$HOSTNAME.mydev.org
 EOF
 
 # Start Puppet service
