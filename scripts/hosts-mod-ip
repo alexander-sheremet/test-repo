@@ -1,34 +1,56 @@
 #!/bin/sh
 # This script should be executed on Windows host under Cygwin to
-# modify Windows hosts file with IP of AWS instance "mydevenv".
-# It requires sudo command to elevate privilegies for updating Windows hosts file.
+# modify Windows hosts file with IP of running AWS instance with tag Name
+# got from $INST_TAG or provided in the 1st parameter.
+# It requires sudo command to elevate privilegies to update Windows hosts file.
 # sudo is the shell script containing: nircmd.exe elevatecmd execmd "$@"
 
 HOSTS_WIN=/cygdrive/c/Windows/System32/drivers/etc/hosts
 HOSTS_TMP=/tmp/hosts
 
-IP=`ec2-inst-get-ip $@`
-
-if [ "$IP" == "None" ]
+if [ -n "$1" ]
 then
-  echo "ERROR: no IP address"
-  exit 1
+  INST_TAG="$1"
 fi
 
-cat "$HOSTS_WIN" | awk -v IP="$IP" '
+if ! INST_ID=`ec2-inst-id-by-tag "$INST_TAG"` || test -z "$INST_ID"
+then
+  echo "ERROR: getting Instance ID failed"
+  exit 1
+else
+  echo "Got Instance ID: $INST_ID"
+fi
+
+if ! IP=`ec2-inst-get-ip $INST_ID`
+then
+  echo "ERROR: getting Instantce public IP failed"
+  exit 1
+else
+  echo "Got Instance public IP: $IP"
+fi
+
+awk -v IP="$IP" -v INST_TAG="$INST_TAG" '
 {
-  if (/mydevenv/)
+  INST_TAG = tolower (INST_TAG)
+  if ($0 ~ INST_TAG)
   {
     split ($0, a, "[ \t]")
     print IP "\t" a[2]
   }
   else
     print
-}' > "$HOSTS_TMP"
+}' "$HOSTS_WIN" > "$HOSTS_TMP"
 
 if sudo cp "$HOSTS_TMP" "$HOSTS_WIN"
 then
-  echo "IP address updated:"
-  grep mydevenv $HOSTS_WIN
-  rm "$HOSTS_TMP"
+  awk -v INST_TAG="$INST_TAG" '
+  {
+    INST_TAG = tolower (INST_TAG)
+    if ($0 ~ INST_TAG)
+    {
+      print "Windows hosts file updated:"
+      print
+    }
+  }' "$HOSTS_WIN"
+  rm -f "$HOSTS_TMP"
 fi
