@@ -12,13 +12,14 @@ if [ -n "$1" ]
 then
   INST_TAG="$1"
 fi
+echo "Instance Tag Name: $INST_TAG"
 
 if ! INST_ID=`ec2-inst-id-by-tag "$INST_TAG"` || test -z "$INST_ID"
 then
   echo "ERROR: getting Instance ID failed"
   exit 1
 else
-  echo "Got Instance ID: $INST_ID"
+  echo "Instance ID: $INST_ID"
 fi
 
 if ! IP=`ec2-inst-get-ip $INST_ID`
@@ -26,7 +27,7 @@ then
   echo "ERROR: getting Instantce public IP failed"
   exit 1
 else
-  echo "Got Instance public IP: $IP"
+  echo "Instance public IP: $IP"
 fi
 
 awk -v IP="$IP" -v INST_TAG="$INST_TAG" '
