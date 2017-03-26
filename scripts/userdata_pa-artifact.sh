@@ -18,7 +18,7 @@ yum -y install puppet
 cat >>/etc/puppet/puppet.conf <<EOF
 
     server=pm-jenkins.mydev.com
-    certname=$HOSTNAME.mydev.org
+    certname=$HOSTNAME
 EOF
 
 # Start Puppet service
