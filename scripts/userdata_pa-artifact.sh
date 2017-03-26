@@ -5,7 +5,7 @@ LOGS="/tmp/userdata-log.$(date -I)"
 exec >$LOGS 2>&1
 
 # Define hostname
-HOSTNAME=pa-artifact
+HOSTNAME=pa-artifact.mydev.com
 hostname $HOSTNAME
 echo $HOSTNAME > /etc/hostname
 echo 172.31.37.107 pm-jenkins.mydev.com >> /etc/hosts
