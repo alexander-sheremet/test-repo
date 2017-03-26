@@ -14,7 +14,11 @@ then
 fi
 echo "Instance Tag Name: $INST_TAG"
 
-if ! INST_ID=`ec2-inst-id-by-tag "$INST_TAG"` || test -z "$INST_ID"
+INST_ID=$(aws ec2 describe-instances \
+  --query "Reservations[*].Instances[?Tags[?Value==\`$INST_TAG\`]].[InstanceId,State.Name]" \
+  --output text | awk '/running/{print $1}')
+
+if [ $? -ne 0 -o -z "$INST_ID" ]
 then
   echo "ERROR: getting Instance ID failed"
   exit 1
@@ -22,7 +26,7 @@ else
   echo "Instance ID: $INST_ID"
 fi
 
-if ! IP=`ec2-inst-get-ip $INST_ID`
+if ! IP=`ec2-inst-get-ip $INST_ID` || test "$IP" = "None"
 then
   echo "ERROR: getting Instantce public IP failed"
   exit 1
