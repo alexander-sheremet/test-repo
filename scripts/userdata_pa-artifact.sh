@@ -26,6 +26,7 @@ EOF
 
 # Start Puppet service
 systemctl start puppet.service
+sleep 5
 
 # Test connection to server
 puppet agent --test
