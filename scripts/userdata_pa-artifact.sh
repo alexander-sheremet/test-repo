@@ -21,8 +21,8 @@ cat >>/etc/puppet/puppet.conf <<EOF
     certname=$HOSTNAME
 EOF
 
-# Start Puppet service
-systemctl start puppet.service
-
 # Test connection to server
 puppet agent --test
+
+# Start Puppet service
+systemctl start puppet.service
