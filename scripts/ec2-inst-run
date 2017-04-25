@@ -26,3 +26,29 @@ aws ec2 run-instances \
 aws ec2 create-tags \
   --resources `cat $HOME/.aws_iid_$INSTNAME` \
   --tags "Key=Name,Value=$INSTNAME"
+
+INST_ID=`cat $HOME/.aws_iid_$INSTNAME`
+
+echo "Waiting for 'running' state"
+while true
+do
+  STATE_NAME=`aws ec2 describe-instances --instance-ids "$INST_ID" --query 'Reservations[0].Instances[0].State.Name' --output text`
+  echo "  $STATE_NAME"
+  if [ "$STATE_NAME" = "running" ]
+  then
+    break
+  fi
+  sleep 10
+done
+
+# Get the instance private IP address
+if ! IP=`aws ec2 describe-instances --instance-ids "$INST_ID" --query 'Reservations[0].Instances[0].PrivateIpAddress' --output text` || test "$IP" = "None"
+then
+  echo "ERROR: getting Instantce private IP failed"
+  exit 1
+else
+  echo "Instance private IP: $IP"
+fi
+
+# Update /etc/hosts with specified IP address for specified hostname
+sudo /root/bin/upd-hosts-ip.sh "$IP" "$INSTNAME"

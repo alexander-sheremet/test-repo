@@ -111,5 +111,5 @@ root	ALL=(ALL) 	ALL
 #includedir /etc/sudoers.d
 
 # Allow jenkins execute puppet commands
-jenkins ALL=(root) NOPASSWD: /bin/puppet, /bin/rm /var/lib/puppet/ssl/ca/signed/*
+jenkins ALL=(root) NOPASSWD: /bin/puppet, /bin/rm /var/lib/puppet/ssl/ca/signed/*, /root/bin/upd-hosts-ip.sh
 
