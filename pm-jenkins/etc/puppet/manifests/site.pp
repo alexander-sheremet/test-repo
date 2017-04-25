@@ -17,10 +17,20 @@ class artifactory {
     ensure => 'installed',
     require => [ Exec['download_rpm_repo'], Package['java-1.8.0-openjdk'] ],
   }
-  service { 'artifactory':
-    ensure    => 'running',
-    enable => 'true',
+  file { '/var/opt/jfrog/artifactory/etc/artifactory.config.import.xml':
+    notify  => Service['artifactory'],  # restart the service when the file changed
+    ensure => present,
+    replace => yes,
+    owner => artifactory,
+    group => artifactory,
+    mode => 644,
     require => Package['jfrog-artifactory-oss'],
+    source => 'puppet:///modules/pa-artifact/artifactory.config.import.xml',
+  }
+  service { 'artifactory':
+    ensure => 'running',
+    enable => 'true',
+    require => File['/var/opt/jfrog/artifactory/etc/artifactory.config.import.xml'],
   }
 }
 
@@ -38,6 +48,7 @@ class appsrv {
     unless => '/bin/test -f /etc/systemd/system/tomcat.service',
   }
   file { '/usr/share/tomcat/conf/tomcat-users.xml':
+    notify  => Service['tomcat'],  # restart the service when the file changed
     ensure => present,
     replace => yes,
     owner => root,
@@ -47,7 +58,7 @@ class appsrv {
     source => 'puppet:///modules/pa-appsrv/tomcat-users.xml',
   }
   service { 'tomcat':
-    ensure    => 'running',
+    ensure => 'running',
     enable => 'true',
     require => [ Exec['install_tomcat_systemd_unit'], File['/usr/share/tomcat/conf/tomcat-users.xml'] ],
   }
