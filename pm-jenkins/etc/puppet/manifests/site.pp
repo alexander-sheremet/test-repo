@@ -32,6 +32,24 @@ class artifactory {
     enable => 'true',
     require => File['/var/opt/jfrog/artifactory/etc/artifactory.config.import.xml'],
   }
+  package { 'nginx':
+    ensure => 'installed',
+  }
+  file { '/etc/nginx/nginx.conf':
+    notify  => Service['nginx'],  # restart the service when the file changed
+    ensure => present,
+    replace => yes,
+    owner => root,
+    group => root,
+    mode    => 644,
+    require => Package['nginx'],
+    source => 'puppet:///modules/pa-artifact/nginx.conf',
+  }
+  service { 'nginx':
+    ensure    => 'running',
+    enable => 'true',
+    require => [ Package['nginx'], File['/etc/nginx/nginx.conf'] ],
+  }
 }
 
 class appsrv {
