@@ -66,6 +66,7 @@ class appsrv {
     ensure => 'installed',
   }
   file { '/etc/nginx/nginx.conf':
+    notify  => Service['nginx'],  # restart the service when the file changed
     ensure => present,
     replace => yes,
     owner => root,
