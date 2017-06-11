@@ -9,6 +9,7 @@ HOSTNAME=pa-artifact.mydev.com
 hostname $HOSTNAME
 echo $HOSTNAME > /etc/hostname
 echo 172.31.37.107 pm-jenkins.mydev.com >> /etc/hosts
+echo 172.31.3.16 zabbix.mydev.org >> /etc/hosts
 echo `ifconfig |awk '/broadcast/{print $2}'` $HOSTNAME >> /etc/hosts
 
 # Turn off SELinux

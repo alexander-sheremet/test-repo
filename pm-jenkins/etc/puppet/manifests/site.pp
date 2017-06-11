@@ -32,6 +32,7 @@ class artifactory {
     enable => 'true',
     require => File['/var/opt/jfrog/artifactory/etc/artifactory.config.import.xml'],
   }
+
   package { 'nginx':
     ensure => 'installed',
   }
@@ -49,6 +50,27 @@ class artifactory {
     ensure    => 'running',
     enable => 'true',
     require => [ Package['nginx'], File['/etc/nginx/nginx.conf'] ],
+  }
+
+  package {"zabbix-agent":
+    ensure => present,
+    source => "http://repo.zabbix.com/zabbix/3.2/rhel/7/x86_64/zabbix-release-3.2-1.el7.noarch.rpm",
+    provider => rpm,
+  }
+  file { '/etc/zabbix/zabbix_agentd.conf':
+    notify  => Service['zabbix-agent'],  # restart the service when the file changed
+    ensure => present,
+    replace => yes,
+    owner => root,
+    group => root,
+    mode    => 644,
+    require => Package['zabbix-agent'],
+    source => 'puppet:///modules/pa-artifact/zabbix-agentd.conf',
+  }
+  service { 'zabbix-agent':
+    ensure    => 'running',
+    enable => 'true',
+    require => [ Package['zabbix-agent'], File['/etc/zabbix/zabbix_agentd.conf'] ],
   }
 }
 
