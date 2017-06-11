@@ -2,6 +2,8 @@
 if versioncmp($::puppetversion, '3.6.0') {Package {allow_virtual => true,}}
 
 class artifactory {
+
+  # artifactory
   package { 'wget':
     ensure => 'installed',
   }
@@ -33,6 +35,7 @@ class artifactory {
     require => File['/var/opt/jfrog/artifactory/etc/artifactory.config.bootstrap.xml'],
   }
 
+  # nginx
   package { 'nginx':
     ensure => 'installed',
   }
@@ -52,6 +55,7 @@ class artifactory {
     require => [ Package['nginx'], File['/etc/nginx/nginx.conf'] ],
   }
 
+  # zabbix agent
   package { 'yum':
     ensure => 'installed',
   }
@@ -62,7 +66,7 @@ class artifactory {
   }
   package {"zabbix-agent":
     ensure => 'installed',
-    require => [ Exec['add_zabbix_repo'] ],
+    require => Exec['add_zabbix_repo'],
   }
   file { '/etc/zabbix/zabbix_agentd.conf':
     notify  => Service['zabbix-agent'],  # restart the service when the file changed
@@ -77,11 +81,13 @@ class artifactory {
   service { 'zabbix-agent':
     ensure    => 'running',
     enable => 'true',
-    require => [ Package['zabbix-agent'], File['/etc/zabbix/zabbix_agentd.conf'] ],
+    require => File['/etc/zabbix/zabbix_agentd.conf'],
   }
 }
 
 class appsrv {
+
+  # tomcat
   package { 'java-1.8.0-openjdk':
     ensure => 'installed',
   }
@@ -109,6 +115,8 @@ class appsrv {
     enable => 'true',
     require => [ Exec['install_tomcat_systemd_unit'], File['/usr/share/tomcat/conf/tomcat-users.xml'] ],
   }
+
+  # nginx
   package { 'nginx':
     ensure => 'installed',
   }
@@ -126,6 +134,35 @@ class appsrv {
     ensure    => 'running',
     enable => 'true',
     require => [ Package['nginx'], File['/etc/nginx/nginx.conf'] ],
+  }
+
+  # zabbix agent
+  package { 'yum':
+    ensure => 'installed',
+  }
+  exec { 'add_zabbix_repo':
+    command => '/bin/yum -y install http://repo.zabbix.com/zabbix/3.2/rhel/7/x86_64/zabbix-release-3.2-1.el7.noarch.rpm',
+    require => Package['yum'],
+    unless => '/bin/test -f /etc/yum.repos.d/zabbix.repo',
+  }
+  package {"zabbix-agent":
+    ensure => 'installed',
+    require => Exec['add_zabbix_repo'],
+  }
+  file { '/etc/zabbix/zabbix_agentd.conf':
+    notify  => Service['zabbix-agent'],  # restart the service when the file changed
+    ensure => present,
+    replace => yes,
+    owner => root,
+    group => root,
+    mode    => 644,
+    require => Package['zabbix-agent'],
+    source => 'puppet:///modules/pa-appsrv/zabbix_agentd.conf',
+  }
+  service { 'zabbix-agent':
+    ensure    => 'running',
+    enable => 'true',
+    require => File['/etc/zabbix/zabbix_agentd.conf'],
   }
 }
 
