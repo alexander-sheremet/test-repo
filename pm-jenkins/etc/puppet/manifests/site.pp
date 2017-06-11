@@ -17,7 +17,7 @@ class artifactory {
     ensure => 'installed',
     require => [ Exec['download_rpm_repo'], Package['java-1.8.0-openjdk'] ],
   }
-  file { '/var/opt/jfrog/artifactory/etc/artifactory.config.import.xml':
+  file { '/var/opt/jfrog/artifactory/etc/artifactory.config.bootstrap.xml':
     notify  => Service['artifactory'],  # restart the service when the file changed
     ensure => present,
     replace => yes,
@@ -25,7 +25,7 @@ class artifactory {
     group => artifactory,
     mode => 644,
     require => Package['jfrog-artifactory-oss'],
-    source => 'puppet:///modules/pa-artifact/artifactory.config.import.xml',
+    source => 'puppet:///modules/pa-artifact/artifactory.config.bootstrap.xml',
   }
   service { 'artifactory':
     ensure => 'running',
@@ -52,10 +52,17 @@ class artifactory {
     require => [ Package['nginx'], File['/etc/nginx/nginx.conf'] ],
   }
 
+  package { 'yum':
+    ensure => 'installed',
+  }
+  exec { 'add_zabbix_repo':
+    command => '/bin/yum -y install http://repo.zabbix.com/zabbix/3.2/rhel/7/x86_64/zabbix-release-3.2-1.el7.noarch.rpm',
+    require => Package['yum'],
+    unless => '/bin/test -f /etc/yum.repos.d/zabbix.repo',
+  }
   package {"zabbix-agent":
-    ensure => present,
-    source => "http://repo.zabbix.com/zabbix/3.2/rhel/7/x86_64/zabbix-release-3.2-1.el7.noarch.rpm",
-    provider => rpm,
+    ensure => 'installed',
+    require => [ Exec['add_zabbix_repo'] ],
   }
   file { '/etc/zabbix/zabbix_agentd.conf':
     notify  => Service['zabbix-agent'],  # restart the service when the file changed
@@ -65,7 +72,7 @@ class artifactory {
     group => root,
     mode    => 644,
     require => Package['zabbix-agent'],
-    source => 'puppet:///modules/pa-artifact/zabbix-agentd.conf',
+    source => 'puppet:///modules/pa-artifact/zabbix_agentd.conf',
   }
   service { 'zabbix-agent':
     ensure    => 'running',
