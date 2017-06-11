@@ -30,7 +30,7 @@ class artifactory {
   service { 'artifactory':
     ensure => 'running',
     enable => 'true',
-    require => File['/var/opt/jfrog/artifactory/etc/artifactory.config.import.xml'],
+    require => File['/var/opt/jfrog/artifactory/etc/artifactory.config.bootstrap.xml'],
   }
 
   package { 'nginx':
