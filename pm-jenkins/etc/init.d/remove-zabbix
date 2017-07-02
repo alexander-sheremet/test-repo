@@ -1,0 +1,67 @@
+#!/bin/bash
+# Remove-Zabbix Init script
+# Should run when an AWS instance goes down and remove itself from Zabbix Server
+#
+# Installation
+#
+# * Copy the script to init.d
+# cp -p remove-zabbix /etc/init.d/
+# chmod 755 /etc/init.d/remove-zabbix
+#
+# * Create a system.d service file:
+# cat > /usr/lib/systemd/system/my-shutdown.service <<EOF
+# [Unit]
+# Description=My Shutdown Service
+# Before=shutdown.target reboot.target halt.target
+# Requires=network-online.target network.target
+# 
+# [Service]
+# KillMode=none
+# ExecStart=/bin/true
+# ExecStop=/etc/init.d/remove-zabbix
+# RemainAfterExit=yes
+# Type=oneshot
+# 
+# [Install]
+# WantedBy=multi-user.target
+# EOF
+# 
+# * Enable the service
+# systemctl enable my-shutdown.service
+# 
+# * Start the service and test by stopping/terminating the instance.
+# systemctl start my-shutdown.service
+
+USER='host-unreg'
+PASS='qwerty'
+API='http://zabbix.mydev.org/zabbix/api_jsonrpc.php'
+
+systemctl stop zabbix-agent
+HOST_NAME=`echo $(hostname)`
+
+# user.login - Authenticate with Zabbix API
+authenticate() {
+   echo `curl -s -H  'Content-Type: application/json-rpc' -d "{\"jsonrpc\": \"2.0\",\"method\":\"user.login\",\"params\":{\"user\":\""${USER}"\",\"password\":\""${PASS}"\"},\"auth\": null,\"id\":0}" $API`
+}
+AUTH_TOKEN=`echo $(authenticate)|jq -r .result`
+
+# host.get - Get this host HostId
+gethostid() {
+   echo `curl -s -H 'Content-Type: application/json-rpc' -d "{\"jsonrpc\": \"2.0\",\"method\":\"host.get\",\"params\":{\"output\":\"extend\",\"filter\":{\"host\":[\""$HOST_NAME"\"]}},\"auth\":\""${AUTH_TOKEN}"\",\"id\":0}" $API`
+}
+HOST_ID=`echo $(gethostid)|jq -r .result[0].hostid`
+
+# host.delete - Unregister this host in Zabbix
+remove_host() {
+   echo `curl -s -H 'Content-Type: application/json-rpc' -d "{\"jsonrpc\": \"2.0\",\"method\":\"host.delete\",\"params\":[\""${HOST_ID}"\"],\"auth\":\""${AUTH_TOKEN}"\",\"id\":0}" $API`
+}
+RESPONSE=$(remove_host)
+if [ -n "`echo ${RESPONSE}|grep '{"jsonrpc":"2.0","result":{"hostids":\["[0-9][0-9]*"\]},"id":[0-9]}'`" ]
+then
+  echo "Done"
+else
+  echo "ERROR: $RESPONSE"
+  exit 1
+fi
+
+exit 0

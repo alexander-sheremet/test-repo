@@ -1,0 +1,14 @@
+[Unit]
+Description=My Shutdown Service
+Before=shutdown.target reboot.target halt.target
+Requires=network-online.target network.target
+
+[Service]
+KillMode=none
+ExecStart=/bin/true
+ExecStop=/etc/init.d/remove-zabbix
+RemainAfterExit=yes
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target

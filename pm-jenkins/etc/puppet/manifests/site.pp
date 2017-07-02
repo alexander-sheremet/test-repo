@@ -54,35 +54,6 @@ class artifactory {
     enable => 'true',
     require => [ Package['nginx'], File['/etc/nginx/nginx.conf'] ],
   }
-
-  # zabbix agent
-  package { 'yum':
-    ensure => 'installed',
-  }
-  exec { 'add_zabbix_repo':
-    command => '/bin/yum -y install http://repo.zabbix.com/zabbix/3.2/rhel/7/x86_64/zabbix-release-3.2-1.el7.noarch.rpm',
-    require => Package['yum'],
-    unless => '/bin/test -f /etc/yum.repos.d/zabbix.repo',
-  }
-  package {"zabbix-agent":
-    ensure => 'installed',
-    require => Exec['add_zabbix_repo'],
-  }
-  file { '/etc/zabbix/zabbix_agentd.conf':
-    notify  => Service['zabbix-agent'],  # restart the service when the file changed
-    ensure => present,
-    replace => yes,
-    owner => root,
-    group => root,
-    mode    => 644,
-    require => Package['zabbix-agent'],
-    source => 'puppet:///modules/pa-artifact/zabbix_agentd.conf',
-  }
-  service { 'zabbix-agent':
-    ensure    => 'running',
-    enable => 'true',
-    require => File['/etc/zabbix/zabbix_agentd.conf'],
-  }
 }
 
 class appsrv {
@@ -135,8 +106,9 @@ class appsrv {
     enable => 'true',
     require => [ Package['nginx'], File['/etc/nginx/nginx.conf'] ],
   }
+}
 
-  # zabbix agent
+class zabbix_agent {
   package { 'yum':
     ensure => 'installed',
   }
@@ -157,7 +129,7 @@ class appsrv {
     group => root,
     mode    => 644,
     require => Package['zabbix-agent'],
-    source => 'puppet:///modules/pa-appsrv/zabbix_agentd.conf',
+    source => 'puppet:///modules/common/zabbix_agentd.conf',
   }
   service { 'zabbix-agent':
     ensure    => 'running',
@@ -166,12 +138,49 @@ class appsrv {
   }
 }
 
+class zabbix_host_removal {
+  package { 'jq':
+    ensure => 'installed',
+  }
+  file { '/etc/init.d/remove-zabbix':
+    ensure => present,
+    replace => yes,
+    owner => root,
+    group => root,
+    mode    => 755,
+    require => Package['jq'],
+    source => 'puppet:///modules/common/remove-zabbix',
+  }
+  file { '/usr/lib/systemd/system/my-shutdown.service':
+    ensure => present,
+    replace => yes,
+    owner => root,
+    group => root,
+    mode    => 644,
+    require => File['/etc/init.d/remove-zabbix'],
+    source => 'puppet:///modules/common/my-shutdown.service',
+  }
+  exec { 'zabbix_host_removal_service_enable':
+    command => '/bin/systemctl enable my-shutdown.service',
+    require => File['/usr/lib/systemd/system/my-shutdown.service'],
+  }
+  service { 'my-shutdown':
+    ensure => 'running',
+    enable => 'true',
+    require => Exec['zabbix_host_removal_service_enable'],
+  }
+}
+
 node 'pa-artifact.mydev.com' {
   include artifactory
+  include zabbix_agent
+  include zabbix_host_removal
 }
 
 node 'pa-appsrv.mydev.com' {
   include appsrv
+  include zabbix_agent
+  include zabbix_host_removal
 }
 
 class testfile {
